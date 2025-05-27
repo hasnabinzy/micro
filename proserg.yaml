@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service-green
+  labels:
+    app: product-service
+    version: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: product-service
+      version: green
+  template:
+    metadata:
+      labels:
+        app: product-service
+        version: green
+    spec:
+      containers:
+      - name: product-service
+        image: your-docker-repo/product-service:green-version  # Replace with your green version image
+        ports:
+        - containerPort: 8080
+

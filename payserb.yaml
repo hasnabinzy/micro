@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service-blue
+  labels:
+    app: payment-service
+    version: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payment-service
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: payment-service
+        version: blue
+    spec:
+      containers:
+      - name: payment-service
+        image: your-docker-repo/payment-service:blue-version  # Replace with your blue version image
+        ports:
+        - containerPort: 8081
+
