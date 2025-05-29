@@ -1,0 +1,109 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'hasnabinzy/combined-service:latest'
+        CREDENTIALS_ID = '815286b6-ff7a-4a61-99d4-769c86d7f133'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                echo "Cloning Git repository..."
+                git url: 'https://github.com/hasnabinzy/micro.git', branch: 'main'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo "Installing npm dependencies..."
+                sh 'npm install'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                echo "No test script defined, skipping..."
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "Building Docker image..."
+                script {
+                    docker.build(DOCKER_IMAGE)
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo "Logging into Docker Hub and pushing image..."
+                withCredentials([usernamePassword(credentialsId: "815286b6-ff7a-4a61-99d4-769c86d7f133", usernameVariable: 'hasnabinzy', passwordVariable: '@Hasna8086')]) {
+                    sh '''
+                        echo "@Hasna8086" | docker login -u "hasnabinzy" --password-stdin
+                        docker push hasnabinzy/combined-service
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo "Deploying to Kubernetes..."
+                sh 'kubectl apply -f proserdep.yaml'
+                sh 'kubectl apply -f payserdep.yaml'
+                sh 'kubectl apply -f payserb.yaml'
+                sh 'kubectl apply -f payserg.yaml'
+                sh 'kubectl apply -f proserb.yaml'
+                sh 'kubectl apply -f proserg.yaml'
+                sh 'kubectl apply -f paysering.yaml'
+                sh 'kubectl apply -f prosering.yaml'
+                sh 'kubectl apply -f prosercon.yaml'
+                sh 'kubectl apply -f paysercon.yaml'
+                
+            }
+        }
+
+        stage('Health Check') {
+    steps {
+        echo "Checking /product service health on cluster IP..."
+        sh '''
+        for i in {1..10}; do
+          curl -f http://172.16.88.103:1000/product && break || sleep 5
+        done
+        '''
+
+        echo "Checking /payment service health on cluster IP..."
+        sh '''
+        for i in {1..10}; do
+          curl -f http://172.16.88.103:1000/payment && break || sleep 5
+        done
+        '''
+
+        echo "Checking /product service health on NodePort 30010..."
+        sh '''
+        for i in {1..10}; do
+          curl -f http://192.168.49.2:30010/product && break || sleep 5
+        done
+        '''
+
+        echo "Checking /payment service health on NodePort 30020..."
+        sh '''
+        for i in {1..10}; do
+          curl -f http://192.168.49.2:30020/payment && break || sleep 5
+        done
+        '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline completed successfully!'
+        }
+        failure {
+            echo '❌ Pipeline failed. Check logs!'
+        }
+    }
+}
