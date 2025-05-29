@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service-green
+  labels:
+    app: payment-service
+    version: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payment-service
+      version: green
+  template:
+    metadata:
+      labels:
+        app: payment-service
+        version: green
+    spec:
+      containers:
+      - name: payment-service
+        image: hasnabinzy/payment-service:green
+        ports:
+        - containerPort: 1000
