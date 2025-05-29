@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: payment-service-config
-data:
-  PAYMENT_API_KEY: "your-api-key"
-  PAYMENT_DB_NAME: "paymentdb"
-
